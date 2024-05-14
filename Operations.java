@@ -1,9 +1,9 @@
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class Operations {
     //ASSUME THAT THE NUMERICAL DATA STARTS AT THE SECOND COLUMN AFTER THE COLUMN HEADERS.
-    //THIS MEANS THAT THE LENGTH OF A COLUMN INPUT MINUS ONE IS EQUAL TO THE NUMBER OF ACTUAL DATA.
-
+    
     /**
      * Returns the mean of a set of numbers in a column of a CSV file.
      * @param data Data read from a CSV file using the CSVReader class.
@@ -96,7 +96,7 @@ public class Operations {
     }
 
     /**
-     * Gets the coefficient of determination (r-squared) of X and Y, the data of both of which are read from a CSV File.
+     * Gets the coefficient of determination (r-squared) of X and Y, the data of both of which are read from a CSV file.
      * @param X Data read from a column of a CSV file representing the independent variable.
      * @param Y Data read from a column of a CSV file representing the probably dependent variable.
      * @return The coefficient of determination.
@@ -117,6 +117,23 @@ public class Operations {
         }
 
         return (1 - SSres/SStot);
+    }
+
+
+    /**
+     * This returns the median of a given set of data read from a column of a CSV file.
+     * @param data The data of which the median is to be found.
+     * @return The median of the given set of data.
+     */
+    public static double median(ArrayList<String> data) {
+        ArrayList<String> dataToBeSorted = data;
+        Collections.sort(dataToBeSorted);
+        
+        if (data.size()%2 == 1) {
+            return Double.parseDouble(dataToBeSorted.get((data.size()+1)/2));
+        } else {
+            return (1/2)*(Double.parseDouble(dataToBeSorted.get(data.size()/2)) + Double.parseDouble(dataToBeSorted.get(1 + data.size()/2)));
+        }
     }
    
 

@@ -11,7 +11,7 @@ public class Main {
         ArrayList<String> Y = csvfile.getDataColumn("ressize");
 
         System.out.println(Operations.covariance(X, Y));
-        System.out.println(Operations.mean(X));
+        System.out.println(Operations.median(X));
     }
 
 }
