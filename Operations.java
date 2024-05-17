@@ -1,7 +1,13 @@
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 
 public class Operations {
+
+    private static final int N = 10;
+
     //ASSUME THAT THE NUMERICAL DATA STARTS AT THE SECOND COLUMN AFTER THE COLUMN HEADERS.
     
     /**
@@ -9,13 +15,13 @@ public class Operations {
      * @param data Data read from a CSV file using the CSVReader class.
      * @return The arithmetic mean (the average) of the data provided.
      */
-    public static double mean(ArrayList<String> data) {
-        double sum = 0;
+    public static BigDecimal mean(ArrayList<String> data) {
+        BigDecimal sum = BigDecimal.ZERO;
         int n = data.size();
-        for (int i=0; i<n; i++) {  
-            sum += Double.parseDouble(data.get(i));
+        for (int i=0; i<n; i++) {
+            sum = sum.add(BigDecimal.valueOf(Double.parseDouble(data.get(i))));
         }
-        return sum/n;
+        return sum.divide(BigDecimal.valueOf(n), N, RoundingMode.HALF_UP);
     }
 
 
@@ -25,18 +31,22 @@ public class Operations {
      * @param Y Data read from a CSV file that is suspected to depend on X.
      * @return The covariance Cov(X,Y)
      */
-    public static double covariance(ArrayList<String> X, ArrayList<String> Y) {
+    public static BigDecimal covariance(ArrayList<String> X, ArrayList<String> Y) {
         int n = X.size();
-        
-        double xBar = mean(X);
-        double yBar = mean(Y);
-        double numerator = 0;
+
+        BigDecimal xBar = mean(X);
+        BigDecimal yBar = mean(Y);
+        BigDecimal numerator = BigDecimal.ZERO;
 
         for (int i=0; i<n; i++) {
-            numerator += (Double.parseDouble(X.get(i)) - xBar)*(Double.parseDouble(Y.get(i)) - yBar);
+            BigDecimal A = (BigDecimal.valueOf(Double.parseDouble(X.get(i)))).subtract(xBar);
+            BigDecimal B = (BigDecimal.valueOf(Double.parseDouble(Y.get(i)))).subtract(yBar);
+            numerator = numerator.add(A.multiply(B));
         }
-        return numerator/(n-1);
+
+        return numerator.divide(BigDecimal.valueOf(n-1), N, RoundingMode.HALF_UP);
     }
+
 
     /**
      * Returns the Pearson correlation coefficient of two variables X, Y, where Y is suspected to depend on X.
@@ -44,23 +54,29 @@ public class Operations {
      * @param Y Data read from a CSV file representing the variable Y.
      * @return 
      */
-    public static double pearsonCorrelation(ArrayList<String> X, ArrayList<String> Y) {
+    public static BigDecimal pearsonCorrelation(ArrayList<String> X, ArrayList<String> Y) {
         int n = X.size();
 
-        double xBar = mean(X);
-        double yBar = mean(Y);
-        double numerator = 0;
-        double denominator1 = 0;
-        double denominator2 = 0;
+        BigDecimal xBar = mean(X);
+        BigDecimal yBar = mean(Y);
+
+        BigDecimal numerator = BigDecimal.ZERO;
+        BigDecimal denominator1 = BigDecimal.ZERO;
+        BigDecimal denominator2 = BigDecimal.ZERO;
 
         for (int i=0; i<n; i++) {
-            numerator += (Double.parseDouble(X.get(i)) - xBar)*(Double.parseDouble(Y.get(i)) - yBar);
-            denominator1 += (Double.parseDouble(X.get(i)) - xBar)*(Double.parseDouble(X.get(i)) - xBar);
-            denominator2 += (Double.parseDouble(Y.get(i)) - yBar)*(Double.parseDouble(Y.get(i)) - yBar);
+            BigDecimal A = (BigDecimal.valueOf(Double.parseDouble(X.get(i)))).subtract(xBar);
+            BigDecimal B = (BigDecimal.valueOf(Double.parseDouble(Y.get(i)))).subtract(yBar);
+            
+            numerator = numerator.add(A.multiply(B));
+            denominator1 = denominator1.add(A.pow(2));
+            denominator2 = denominator2.add(B.pow(2));
         }
 
-        return numerator/Math.sqrt(denominator1*denominator2);
+        BigDecimal actualDenominator = (denominator1.multiply(denominator2)).sqrt(MathContext.DECIMAL128);
+        return numerator.divide(actualDenominator, N, RoundingMode.HALF_UP);
     }
+
 
    /**
     * Provides the coefficients of the equation of the line that approximates the relationship between two variables.
@@ -68,32 +84,39 @@ public class Operations {
     * @param Y Data read from a column of a CSV file representing the probably dependent variable.
     * @return An array of two numbers where the number at index 0 is the X-intercept of the regression line and the number at index 1 is the coefficient of X in the regression line.
     */
-    public static double[] linearRegresssionCoefficients(ArrayList<String> X, ArrayList<String> Y) { 
+   
+    public static BigDecimal[] linearRegresssionCoefficients(ArrayList<String> X, ArrayList<String> Y) { 
         int n = X.size();
 
-        double sumOfY = 0;
-        double sumOfX = 0;
-        double sumOfXSquared = 0;
-        double sumOfXTimesY = 0;
+        BigDecimal sumOfY = BigDecimal.ZERO;
+        BigDecimal sumOfX = BigDecimal.ZERO;
+        BigDecimal sumOfXSquared = BigDecimal.ZERO;
+        BigDecimal sumOfXTimesY = BigDecimal.ZERO;
 
         for (int j=0; j<n; j++) {
-            sumOfY += Double.parseDouble(Y.get(j));
+            sumOfY = sumOfY.add(BigDecimal.valueOf(Double.parseDouble(Y.get(j))));
         }
 
         for (int i=0; i<n; i++) {
-            sumOfX += Double.parseDouble(X.get(i));
-            sumOfXSquared += Double.parseDouble(X.get(i))*Double.parseDouble(X.get(i));
+            sumOfX = sumOfX.add(BigDecimal.valueOf(Double.parseDouble(X.get(i))));
+            sumOfXSquared = sumOfXSquared.add((BigDecimal.valueOf(Double.parseDouble(X.get(i)))).pow(2));
         }
 
         for (int k=0; k<n; k++) {
-            sumOfXTimesY += Double.parseDouble(X.get(k))*Double.parseDouble(Y.get(k));
+            sumOfXTimesY = sumOfXTimesY.add((BigDecimal.valueOf(Double.parseDouble(X.get(k)))).multiply(BigDecimal.valueOf(Double.parseDouble(Y.get(k)))));
         }
 
-        double a = (sumOfY*sumOfXSquared - sumOfX*sumOfXTimesY)/(n*sumOfXSquared - sumOfX*sumOfX); //x-intercept
-        double b = (n*sumOfXTimesY - sumOfX*sumOfY)/(n*sumOfXSquared - sumOfX*sumOfX); //coefficient of X
+        BigDecimal a1 = (sumOfY.multiply(sumOfXSquared)).subtract(sumOfX.multiply(sumOfXTimesY));
+        BigDecimal a2 = (BigDecimal.valueOf(n).multiply(sumOfXSquared)).subtract(sumOfX.pow(2));
+        BigDecimal a = a1.divide(a2, N, RoundingMode.HALF_UP); //x-intercept
 
-        return new double[]{a,b};
+        BigDecimal b1 = (BigDecimal.valueOf(n).multiply(sumOfXTimesY)).subtract(sumOfX.multiply(sumOfY)); 
+        BigDecimal b2 = (BigDecimal.valueOf(n).multiply(sumOfXSquared)).subtract(sumOfX.pow(2));
+        BigDecimal b = b1.divide(b2, N, RoundingMode.HALF_UP); //coefficient of X
+
+        return new BigDecimal[]{a,b};
     }
+    
 
     /**
      * Gets the coefficient of determination (r-squared) of X and Y, the data of both of which are read from a CSV file.
@@ -101,42 +124,47 @@ public class Operations {
      * @param Y Data read from a column of a CSV file representing the probably dependent variable.
      * @return The coefficient of determination.
      */
-    public static double rSquared(ArrayList<String> X, ArrayList<String> Y) { //Y against X
+    
+    public static BigDecimal rSquared(ArrayList<String> X, ArrayList<String> Y) { //Y against X
         int n = X.size();
         
-        double yBar = mean(Y);
-        double betaZero = linearRegresssionCoefficients(X,Y)[0];
-        double betaOne = linearRegresssionCoefficients(X,Y)[1];
+        BigDecimal yBar = mean(Y);
+        BigDecimal betaZero = linearRegresssionCoefficients(X,Y)[0];
+        BigDecimal betaOne = linearRegresssionCoefficients(X,Y)[1];
 
-        double SSres = 0;
-        double SStot = 0;
+        BigDecimal SSres = BigDecimal.ZERO;
+        BigDecimal SStot = BigDecimal.ZERO;
 
         for (int i=0; i<n; i++) {
-            SStot += (Double.parseDouble(Y.get(i)) - yBar)*(Double.parseDouble(Y.get(i)) - yBar);
-            SSres += (Double.parseDouble(Y.get(i)) - (betaZero+betaOne*Double.parseDouble(X.get(i))))*(Double.parseDouble(Y.get(i)) - (betaZero+betaOne*Double.parseDouble(X.get(i))));
+            BigDecimal yi = BigDecimal.valueOf(Double.parseDouble(Y.get(i)));
+            BigDecimal xi = BigDecimal.valueOf(Double.parseDouble(X.get(i)));
+
+            SStot = SStot.add(yi.subtract(yBar).pow(2));
+            SSres = SSres.add((yi.subtract(betaZero.add(xi.multiply(betaOne))).pow(2)));
         }
 
-        return (1 - SSres/SStot);
+        return BigDecimal.ONE.subtract(SSres.divide(SStot, N, RoundingMode.HALF_UP));
     }
-
+    
 
     /**
      * This returns the median of a given set of data read from a column of a CSV file.
      * @param data The data of which the median is to be found.
      * @return The median of the given set of data.
      */
-    public static double median(ArrayList<String> data) {
+    
+    public static BigDecimal median(ArrayList<String> data) {
         ArrayList<String> dataToBeSorted = data;
         Collections.sort(dataToBeSorted);
+
+        double result = 0;
         
         if (data.size()%2 == 1) {
-            return Double.parseDouble(dataToBeSorted.get((data.size()+1)/2));
+            result = Double.parseDouble(dataToBeSorted.get((data.size()+1)/2));
         } else {
-            return (1/2)*(Double.parseDouble(dataToBeSorted.get(data.size()/2)) + Double.parseDouble(dataToBeSorted.get(1 + data.size()/2)));
+            result = (1/2)*(Double.parseDouble(dataToBeSorted.get(data.size()/2)) + Double.parseDouble(dataToBeSorted.get(1 + data.size()/2)));
         }
+
+        return BigDecimal.valueOf(result);
     }
-   
-
-
-
 }
