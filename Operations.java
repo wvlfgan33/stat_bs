@@ -6,7 +6,7 @@ import java.util.Collections;
 
 public class Operations {
 
-    private static final int N = 10;
+    private static final int N = 6;
 
     //ASSUME THAT THE NUMERICAL DATA STARTS AT THE SECOND COLUMN AFTER THE COLUMN HEADERS.
     
