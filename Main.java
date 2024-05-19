@@ -12,6 +12,8 @@ public class Main {
 
         System.out.println(Operations.covariance(X, Y));
         System.out.println(Operations.median(X));
+
+        System.out.println(Special.gamma(0.25));
     }
 
 }
